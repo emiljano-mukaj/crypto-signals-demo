@@ -39,8 +39,8 @@ strong, 5 to 7 very strong.
 Any static server works:
 
 ```bash
-git clone <this-repo>
-cd emgruppencryptosignals-demo
+git clone https://github.com/emiljano-mukaj/crypto-signals-demo.git
+cd crypto-signals-demo
 python3 -m http.server 8080
 ```
 
