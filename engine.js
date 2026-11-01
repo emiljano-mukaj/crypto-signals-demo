@@ -253,7 +253,6 @@
 
   global.EMG = global.EMG || {};
   global.EMG.engine = {
-    SCALE_MAX: SCALE_MAX,
     emaSeries: emaSeries,
     rsi: rsi,
     macdHistogramPct: macdHistogramPct,

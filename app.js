@@ -18,8 +18,7 @@
     overview: null,
     pairSource: '—',
     candles: {},
-    scores: {},
-    updatedAt: null
+    scores: {}
   };
 
   let chart = null;
@@ -470,7 +469,7 @@
           state.pairSource = result.source;
           renderDetail(symbol);
         }
-      } catch (error) {
+      } catch {
         paintScore(symbol);
         if (state.symbol === symbol) {
           renderDetailError('Market data is unavailable for this pair right now.');
@@ -522,11 +521,10 @@
     try {
       const snapshot = await api.overview();
       state.overview = snapshot;
-      state.updatedAt = snapshot.at;
       COINS.forEach(function (coin) { paintQuote(coin.symbol); });
       setUpdatedLabel(snapshot.at);
       setMarketStatus(snapshot.source);
-    } catch (error) {
+    } catch {
       setMarketStatus('Data unavailable', 'error');
       document.getElementById('updated').textContent = 'Could not reach the market data service';
     }

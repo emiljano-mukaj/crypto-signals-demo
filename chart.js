@@ -174,25 +174,23 @@
   };
 
   Chart.prototype._volume = function (ctx, g) {
-    const ctx2 = ctx;
     let maxVol = 0;
-    let i;
-    for (i = 0; i < this.candles.length; i++) {
+    for (let i = 0; i < this.candles.length; i++) {
       if ((this.candles[i].v || 0) > maxVol) maxVol = this.candles[i].v;
     }
     if (!maxVol) return;
 
-    ctx2.save();
-    for (i = 0; i < this.candles.length; i++) {
+    ctx.save();
+    for (let i = 0; i < this.candles.length; i++) {
       const c = this.candles[i];
       const ratio = (c.v || 0) / maxVol;
       const h = Math.max(1, ratio * g.volumeH);
       const x = this._x(i, g);
       const up = c.c >= c.o;
-      ctx2.fillStyle = up ? COLORS.upSoft : COLORS.downSoft;
-      ctx2.fillRect(x - g.bodyW / 2, g.volumeTop + (g.volumeH - h), g.bodyW, h);
+      ctx.fillStyle = up ? COLORS.upSoft : COLORS.downSoft;
+      ctx.fillRect(x - g.bodyW / 2, g.volumeTop + (g.volumeH - h), g.bodyW, h);
     }
-    ctx2.restore();
+    ctx.restore();
   };
 
   Chart.prototype._candles = function (ctx, g) {
