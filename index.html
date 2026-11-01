@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crypto Signals — EM Gruppen (Demo)</title>
+  <meta name="description" content="A browser-only demo of EM Gruppen Crypto Signals: public market data, a small illustrative scoring model, and a chart. No account, no API key, no build step." />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#070b14" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1421'/%3E%3Ctext x='16' y='21.5' font-family='-apple-system,Segoe UI,sans-serif' font-size='13' font-weight='700' fill='%2321c7b6' text-anchor='middle'%3EEM%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="engine.js" defer></script>
+  <script src="api.js" defer></script>
+  <script src="chart.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to market data</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="./" aria-label="EM Gruppen Crypto Signals">
+        <span class="brand__mark" aria-hidden="true">EM</span>
+        <span class="brand__name">Crypto Signals</span>
+        <span class="brand__tag">Demo</span>
+      </a>
+      <nav class="topbar__nav" aria-label="Page sections">
+        <a href="#method">Method</a>
+        <a href="https://emgruppen.com" target="_blank" rel="noopener">EM Gruppen</a>
+        <!-- TODO: point at the public repository once it is published. -->
+        <a class="btn btn--ghost" data-repo-link href="https://github.com/" target="_blank" rel="noopener">Source</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Market tooling</p>
+      <h1>One screen for the pairs that matter.</h1>
+      <p class="lede">
+        A browser-only slice of the Crypto Signals product. Public market data in,
+        a small transparent scoring model out. No account, no API key, no build step.
+      </p>
+      <ul class="hero__facts">
+        <li><span class="dot" aria-hidden="true"></span>18 pairs</li>
+        <li>Daily candles</li>
+        <li>Equal-weight model</li>
+        <li>Runs entirely in the browser</li>
+      </ul>
+    </section>
+
+    <aside class="notice" role="note">
+      <span class="notice__label">Demo build</span>
+      <p>
+        The signal score is an illustrative equal-weight blend of four standard
+        indicators. It is not the production model, contains no entry or exit rules,
+        and is not investment advice.
+      </p>
+    </aside>
+
+    <div class="workspace" id="workspace">
+
+      <section class="panel market" aria-labelledby="market-title">
+        <div class="panel__head">
+          <h2 id="market-title">Market</h2>
+          <span class="panel__hint" id="market-status">Connecting</span>
+        </div>
+
+        <div class="field">
+          <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.6" />
+            <path d="M13.2 13.2 17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <input
+            id="search"
+            class="field__input"
+            type="search"
+            placeholder="Filter pairs"
+            aria-label="Filter pairs by name or ticker"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="market__columns" aria-hidden="true">
+          <span>Pair</span>
+          <span>Price</span>
+          <span>24h</span>
+          <span>Score</span>
+        </div>
+
+        <div class="market__list" id="market-list" aria-label="Trading pairs" aria-busy="true"></div>
+
+        <p class="market__empty" id="market-empty" hidden>No pairs match that filter.</p>
+
+        <div class="market__foot">
+          <button class="btn btn--quiet" id="refresh" type="button">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M16.5 3.5V7H13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Refresh
+          </button>
+          <span class="market__updated" id="updated" aria-live="off">Awaiting data</span>
+        </div>
+      </section>
+
+      <section class="panel detail" aria-labelledby="pair-name">
+        <div class="detail__head">
+          <div class="detail__id">
+            <h2 id="pair-name">—</h2>
+            <p class="detail__meta">
+              <span class="mono" id="pair-symbol">—</span>
+              <span class="sep" aria-hidden="true">·</span>
+              <span id="pair-source">—</span>
+            </p>
+          </div>
+          <div class="detail__quote">
+            <p class="quote__price mono" id="pair-price">—</p>
+            <p class="quote__change mono" id="pair-change">—</p>
+          </div>
+        </div>
+
+        <div class="signal">
+          <svg class="gauge" id="gauge" viewBox="0 0 320 178" role="img" aria-label="Signal gauge from bearish to bullish"></svg>
+          <p class="signal__readout" id="signal-readout" aria-live="polite">Loading signal…</p>
+        </div>
+
+        <figure class="chart">
+          <figcaption class="chart__caption">
+            <span id="chart-title">Daily candles, last 90 sessions</span>
+            <span class="chart__legend">
+              <span class="legend__item"><i class="legend__swatch legend__swatch--ema" aria-hidden="true"></i>EMA 20</span>
+              <span class="legend__item"><i class="legend__swatch legend__swatch--up" aria-hidden="true"></i>Up</span>
+              <span class="legend__item"><i class="legend__swatch legend__swatch--down" aria-hidden="true"></i>Down</span>
+            </span>
+          </figcaption>
+          <div class="chart__frame">
+            <canvas id="chart" aria-label="Candlestick chart"></canvas>
+            <div class="chart__tip" id="chart-tip" hidden></div>
+          </div>
+        </figure>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="breakdown">
+          <div class="breakdown__head">
+            <h3>How this score was built</h3>
+            <p class="breakdown__hint">Four standard indicators, equal weight, scored on a fixed scale.</p>
+          </div>
+          <div class="breakdown__rows" id="breakdown"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="method" id="method" aria-labelledby="method-title">
+      <div class="method__head">
+        <h2 id="method-title">The model, in the open</h2>
+        <p>
+          Nothing hidden: every point in the score comes from one of these four
+          readings on the last 120 daily candles.
+        </p>
+      </div>
+      <div class="method__grid">
+        <article class="method__card">
+          <span class="method__weight">±2</span>
+          <h3>EMA trend</h3>
+          <p>Where the 20-period average sits relative to the 50-period average, as a percentage of price.</p>
+        </article>
+        <article class="method__card">
+          <span class="method__weight">±2</span>
+          <h3>RSI (14)</h3>
+          <p>Momentum bands. Oversold below 30 adds points, overbought above 70 subtracts them.</p>
+        </article>
+        <article class="method__card">
+          <span class="method__weight">±2</span>
+          <h3>MACD histogram</h3>
+          <p>The 12/26 EMA difference minus its 9-period signal, normalised by price so pairs are comparable.</p>
+        </article>
+        <article class="method__card">
+          <span class="method__weight">±1</span>
+          <h3>On-balance volume</h3>
+          <p>Whether volume is accumulating on up days or down days across the last 14 sessions.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <p class="footer__brand">EM Gruppen</p>
+      <p class="footer__note">
+        Demo only. Public data from Binance and CoinGecko. Not investment advice.
+      </p>
+      <p class="footer__links">
+        <a href="https://emgruppen.com" target="_blank" rel="noopener">emgruppen.com</a>
+        <a data-repo-link href="https://github.com/" target="_blank" rel="noopener">Source</a>
+      </p>
+    </div>
+  </footer>
+
+  <noscript>
+    <p class="noscript">This demo needs JavaScript enabled.</p>
+  </noscript>
+</body>
+</html>
