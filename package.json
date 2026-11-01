@@ -1,0 +1,13 @@
+{
+  "name": "crypto-signals-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser-only demo of EM Gruppen Crypto Signals: public market data, illustrative scoring, canvas chart.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
