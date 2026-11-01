@@ -1,5 +1,5 @@
 /*
- * Crypto Signals — UI layer
+ * Crypto Signals: UI layer
  *
  * Wires the data layer and the indicator engine to the page. All state lives
  * in `state`; rendering functions are pure reads of that state.
@@ -7,12 +7,12 @@
 (function (global) {
   'use strict';
 
-  var api = global.EMG.api;
-  var engine = global.EMG.engine;
+  const api = global.EMG.api;
+  const engine = global.EMG.engine;
 
-  var COINS = api.COINS;
+  const COINS = api.COINS;
 
-  var state = {
+  const state = {
     symbol: 'BTCUSDT',
     filter: '',
     overview: null,
@@ -22,14 +22,14 @@
     updatedAt: null
   };
 
-  var chart = null;
-  var pending = {};
+  let chart = null;
+  const pending = {};
 
   /* ---------- formatting ---------- */
 
   function fmtPrice(value) {
     if (value === null || value === undefined || !isFinite(value)) return '—';
-    var digits;
+    let digits;
     if (Math.abs(value) >= 1000) digits = 0;
     else if (Math.abs(value) >= 100) digits = 2;
     else if (Math.abs(value) >= 1) digits = 3;
@@ -67,8 +67,8 @@
   /* ---------- market list ---------- */
 
   function buildMarketRows() {
-    var list = document.getElementById('market-list');
-    var html = COINS.map(function (coin) {
+    const list = document.getElementById('market-list');
+    const html = COINS.map(function (coin) {
       return (
         '<button class="market__row" type="button" aria-pressed="false" data-symbol="' +
         coin.symbol +
@@ -87,7 +87,7 @@
     list.innerHTML = html;
 
     list.addEventListener('click', function (event) {
-      var row = event.target.closest('.market__row');
+      const row = event.target.closest('.market__row');
       if (!row) return;
       selectPair(row.getAttribute('data-symbol'), true);
     });
@@ -100,11 +100,11 @@
   }
 
   function paintQuote(symbol) {
-    var row = rowFor(symbol);
+    const row = rowFor(symbol);
     if (!row || !state.overview) return;
-    var quote = state.overview.quotes[symbol];
-    var priceCell = row.querySelector('[data-cell="price"]');
-    var changeCell = row.querySelector('[data-cell="change"]');
+    const quote = state.overview.quotes[symbol];
+    const priceCell = row.querySelector('[data-cell="price"]');
+    const changeCell = row.querySelector('[data-cell="change"]');
 
     if (!quote) {
       priceCell.textContent = '—';
@@ -114,23 +114,23 @@
 
     priceCell.textContent = fmtPrice(quote.price);
 
-    var tone = quote.changePct >= 0 ? 'tone-up' : 'tone-down';
+    const tone = quote.changePct >= 0 ? 'tone-up' : 'tone-down';
     changeCell.textContent = fmtPct(quote.changePct);
     changeCell.className = 'cell--num ' + tone;
   }
 
   function paintScore(symbol) {
-    var row = rowFor(symbol);
+    const row = rowFor(symbol);
     if (!row) return;
-    var cell = row.querySelector('[data-cell="score"]');
-    var score = state.scores[symbol];
+    const cell = row.querySelector('[data-cell="score"]');
+    const score = state.scores[symbol];
 
     if (!score) {
       cell.innerHTML = '<span class="badge badge--flat">—</span>';
       return;
     }
 
-    var tone = toneFor(score.points);
+    const tone = toneFor(score.points);
     cell.innerHTML =
       '<span class="badge badge--' + tone + '" title="' + score.label + '">' +
       fmtPoints(score.points) +
@@ -139,21 +139,21 @@
 
   function markActiveRow() {
     document.querySelectorAll('.market__row').forEach(function (row) {
-      var isActive = row.getAttribute('data-symbol') === state.symbol;
+      const isActive = row.getAttribute('data-symbol') === state.symbol;
       row.classList.toggle('is-active', isActive);
       row.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
   }
 
   function applyFilter() {
-    var query = state.filter.trim().toLowerCase();
-    var visible = 0;
+    const query = state.filter.trim().toLowerCase();
+    let visible = 0;
 
     COINS.forEach(function (coin) {
-      var row = rowFor(coin.symbol);
+      const row = rowFor(coin.symbol);
       if (!row) return;
-      var haystack = (coin.name + ' ' + baseSymbol(coin.symbol)).toLowerCase();
-      var match = !query || haystack.indexOf(query) !== -1;
+      const haystack = (coin.name + ' ' + baseSymbol(coin.symbol)).toLowerCase();
+      const match = !query || haystack.indexOf(query) !== -1;
       row.hidden = !match;
       if (match) visible++;
     });
@@ -163,10 +163,10 @@
 
   /* ---------- gauge ---------- */
 
-  var SVG_NS = 'http://www.w3.org/2000/svg';
+  const SVG_NS = 'http://www.w3.org/2000/svg';
 
   function gaugePoint(cx, cy, radius, fraction) {
-    var angle = Math.PI + fraction * Math.PI;
+    const angle = Math.PI + fraction * Math.PI;
     return {
       x: cx + radius * Math.cos(angle),
       y: cy + radius * Math.sin(angle)
@@ -174,11 +174,11 @@
   }
 
   function renderGauge(score) {
-    var svg = document.getElementById('gauge');
-    var cx = 160;
-    var cy = 150;
-    var radius = 118;
-    var fraction = Math.max(0, Math.min(1, (score.points + score.max) / (score.max * 2)));
+    const svg = document.getElementById('gauge');
+    const cx = 160;
+    const cy = 150;
+    const radius = 118;
+    const fraction = Math.max(0, Math.min(1, (score.points + score.max) / (score.max * 2)));
 
     svg.innerHTML = '';
     svg.setAttribute(
@@ -186,8 +186,8 @@
       'Signal gauge: ' + score.label + ', ' + fmtPoints(score.points) + ' out of ' + score.max
     );
 
-    var defs = document.createElementNS(SVG_NS, 'defs');
-    var gradient = document.createElementNS(SVG_NS, 'linearGradient');
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    const gradient = document.createElementNS(SVG_NS, 'linearGradient');
     gradient.setAttribute('id', 'gauge-gradient');
     gradient.setAttribute('x1', '0%');
     gradient.setAttribute('y1', '0%');
@@ -198,7 +198,7 @@
       ['50%', '#3a4763'],
       ['100%', '#21c7b6']
     ].forEach(function (stop) {
-      var node = document.createElementNS(SVG_NS, 'stop');
+      const node = document.createElementNS(SVG_NS, 'stop');
       node.setAttribute('offset', stop[0]);
       node.setAttribute('stop-color', stop[1]);
       gradient.appendChild(node);
@@ -207,9 +207,9 @@
     svg.appendChild(defs);
 
     function arc(from, to, stroke, width, opacity, dash) {
-      var start = gaugePoint(cx, cy, radius, from);
-      var end = gaugePoint(cx, cy, radius, to);
-      var path = document.createElementNS(SVG_NS, 'path');
+      const start = gaugePoint(cx, cy, radius, from);
+      const end = gaugePoint(cx, cy, radius, to);
+      const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute(
         'd',
         'M' + start.x.toFixed(2) + ' ' + start.y.toFixed(2) +
@@ -227,17 +227,17 @@
 
     arc(0, 1, '#1b2740', 12, 1);
     if (score.points !== 0) {
-      var from = Math.min(0.5, fraction);
-      var to = Math.max(0.5, fraction);
+      const from = Math.min(0.5, fraction);
+      const to = Math.max(0.5, fraction);
       arc(from, to, 'url(#gauge-gradient)', 12, 1);
     }
 
     // Ticks every whole point, longer at the ends and the middle.
-    for (var i = -score.max; i <= score.max; i++) {
-      var t = (i + score.max) / (score.max * 2);
-      var outer = gaugePoint(cx, cy, radius - 20, t);
-      var inner = gaugePoint(cx, cy, radius - (i % 7 === 0 ? 30 : 26), t);
-      var tick = document.createElementNS(SVG_NS, 'line');
+    for (let i = -score.max; i <= score.max; i++) {
+      const t = (i + score.max) / (score.max * 2);
+      const outer = gaugePoint(cx, cy, radius - 20, t);
+      const inner = gaugePoint(cx, cy, radius - (i % 7 === 0 ? 30 : 26), t);
+      const tick = document.createElementNS(SVG_NS, 'line');
       tick.setAttribute('x1', outer.x);
       tick.setAttribute('y1', outer.y);
       tick.setAttribute('x2', inner.x);
@@ -248,8 +248,8 @@
     }
 
     // Needle
-    var tip = gaugePoint(cx, cy, radius - 34, fraction);
-    var needle = document.createElementNS(SVG_NS, 'line');
+    const tip = gaugePoint(cx, cy, radius - 34, fraction);
+    const needle = document.createElementNS(SVG_NS, 'line');
     needle.setAttribute('x1', cx);
     needle.setAttribute('y1', cy);
     needle.setAttribute('x2', tip.x);
@@ -259,7 +259,7 @@
     needle.setAttribute('stroke-linecap', 'round');
     svg.appendChild(needle);
 
-    var hub = document.createElementNS(SVG_NS, 'circle');
+    const hub = document.createElementNS(SVG_NS, 'circle');
     hub.setAttribute('cx', cx);
     hub.setAttribute('cy', cy);
     hub.setAttribute('r', 5);
@@ -273,8 +273,8 @@
       { text: 'Neutral', fraction: 0.5, anchor: 'middle' },
       { text: 'Bullish', fraction: 0.98, anchor: 'end' }
     ].forEach(function (tick) {
-      var point = gaugePoint(cx, cy, radius - 52, tick.fraction);
-      var label = document.createElementNS(SVG_NS, 'text');
+      const point = gaugePoint(cx, cy, radius - 52, tick.fraction);
+      const label = document.createElementNS(SVG_NS, 'text');
       label.setAttribute('x', tick.anchor === 'start' ? 34 : tick.anchor === 'end' ? 286 : point.x);
       label.setAttribute('y', 172);
       label.setAttribute('text-anchor', tick.anchor);
@@ -289,16 +289,16 @@
   /* ---------- detail panel ---------- */
 
   function renderDetail(symbol) {
-    var coin = COINS.find(function (c) { return c.symbol === symbol; });
-    var score = state.scores[symbol];
-    var quote = state.overview && state.overview.quotes[symbol];
+    const coin = COINS.find(function (c) { return c.symbol === symbol; });
+    const score = state.scores[symbol];
+    const quote = state.overview && state.overview.quotes[symbol];
 
     document.getElementById('pair-name').textContent = coin ? coin.name : symbol;
     document.getElementById('pair-symbol').textContent = baseSymbol(symbol) + '/USDT';
     document.getElementById('pair-source').textContent = state.pairSource + ' · daily candles';
 
-    var priceEl = document.getElementById('pair-price');
-    var changeEl = document.getElementById('pair-change');
+    const priceEl = document.getElementById('pair-price');
+    const changeEl = document.getElementById('pair-change');
 
     if (quote) {
       priceEl.textContent = '$' + fmtPrice(quote.price);
@@ -317,7 +317,7 @@
 
     renderGauge(score);
 
-    var toneClass = score.tone === 'up' ? 'tone-up' : score.tone === 'down' ? 'tone-down' : 'tone-flat';
+    const toneClass = score.tone === 'up' ? 'tone-up' : score.tone === 'down' ? 'tone-down' : 'tone-flat';
     document.getElementById('signal-readout').innerHTML =
       '<strong class="' + toneClass + '">' + score.label + '</strong>' +
       ' · score ' + fmtPoints(score.points) + ' of ±' + score.max;
@@ -328,10 +328,10 @@
   }
 
   function renderStats(quote, score) {
-    var stats = score.stats;
-    var volumeValue = quote && quote.quoteVolume ? fmtCompact(quote.quoteVolume) : '—';
+    const stats = score.stats;
+    const volumeValue = quote && quote.quoteVolume ? fmtCompact(quote.quoteVolume) : '—';
 
-    var tiles = [
+    const tiles = [
       { label: '24h volume', value: volumeValue },
       { label: 'Volatility (ATR)', value: stats.atrPct === null ? '—' : stats.atrPct.toFixed(1) + '%' },
       { label: '30d range', value: stats.range30 ? stats.range30.position.toFixed(0) + '% from low' : '—' },
@@ -352,12 +352,12 @@
   }
 
   function renderBreakdown(score) {
-    var rows = score.components.map(function (component) {
-      var tone = toneFor(component.points);
-      var share = Math.min(1, Math.abs(component.points) / component.max);
-      var width = (share * 50).toFixed(1) + '%';
+    const rows = score.components.map(function (component) {
+      const tone = toneFor(component.points);
+      const share = Math.min(1, Math.abs(component.points) / component.max);
+      const width = (share * 50).toFixed(1) + '%';
 
-      var fillStyle =
+      const fillStyle =
         component.points >= 0
           ? 'left:50%;width:' + width
           : 'right:50%;width:' + width;
@@ -389,13 +389,13 @@
       );
     }
 
-    var candles = (state.candles[symbol] || []).slice(-90);
+    const candles = (state.candles[symbol] || []).slice(-90);
     if (!candles.length) return;
 
-    var closes = state.candles[symbol].map(function (c) { return c.c; });
-    var emaFull = engine.emaSeries(closes, 20);
-    var offset = state.candles[symbol].length - candles.length;
-    var ema = emaFull.slice(offset);
+    const closes = state.candles[symbol].map(function (c) { return c.c; });
+    const emaFull = engine.emaSeries(closes, 20);
+    const offset = state.candles[symbol].length - candles.length;
+    const ema = emaFull.slice(offset);
 
     chart.setFormat(formatAxisPrice);
     chart.setData(candles, ema);
@@ -426,14 +426,14 @@
   /* ---------- loading ---------- */
 
   function setMarketStatus(text, tone) {
-    var el = document.getElementById('market-status');
+    const el = document.getElementById('market-status');
     el.textContent = text;
     el.style.color = tone === 'error' ? 'var(--red)' : '';
   }
 
   function setUpdatedLabel(at) {
     if (!at) return;
-    var time = new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     document.getElementById('updated').textContent = 'Updated ' + time;
   }
 
@@ -460,9 +460,9 @@
 
     pending[symbol] = (async function () {
       try {
-        var result = await api.candles(symbol);
+        const result = await api.candles(symbol);
         state.candles[symbol] = result.candles;
-        var computed = engine.score(result.candles);
+        const computed = engine.score(result.candles);
         if (computed) state.scores[symbol] = computed;
         paintScore(symbol);
 
@@ -484,10 +484,10 @@
   }
 
   async function loadScores() {
-    var ordered = [state.symbol].concat(
+    const ordered = [state.symbol].concat(
       COINS.map(function (c) { return c.symbol; }).filter(function (s) { return s !== state.symbol; })
     );
-    var sources = {};
+    const sources = {};
 
     await api.manyCandles(ordered, function (symbol, result) {
       if (result.error) {
@@ -496,7 +496,7 @@
       }
       sources[result.source] = (sources[result.source] || 0) + 1;
       state.candles[symbol] = result.candles;
-      var computed = engine.score(result.candles);
+      const computed = engine.score(result.candles);
       if (computed) state.scores[symbol] = computed;
       paintScore(symbol);
       if (symbol === state.symbol) {
@@ -505,8 +505,8 @@
       }
     });
 
-    var failed = ordered.filter(function (s) { return !state.scores[s]; }).length;
-    var primary =
+    const failed = ordered.filter(function (s) { return !state.scores[s]; }).length;
+    const primary =
       Object.keys(sources).sort(function (a, b) { return sources[b] - sources[a]; })[0] ||
       'Market data';
 
@@ -520,7 +520,7 @@
 
   async function loadOverview() {
     try {
-      var snapshot = await api.overview();
+      const snapshot = await api.overview();
       state.overview = snapshot;
       state.updatedAt = snapshot.at;
       COINS.forEach(function (coin) { paintQuote(coin.symbol); });
@@ -533,7 +533,7 @@
   }
 
   async function refreshAll() {
-    var button = document.getElementById('refresh');
+    const button = document.getElementById('refresh');
     button.setAttribute('aria-busy', 'true');
     setMarketStatus('Refreshing');
 
@@ -552,9 +552,9 @@
   /* ---------- wiring ---------- */
 
   function readHash() {
-    var raw = (location.hash || '').replace(/^#\/?/, '').toUpperCase().trim();
+    const raw = (location.hash || '').replace(/^#\/?/, '').toUpperCase().trim();
     if (!raw) return null;
-    var symbol = raw.indexOf('USDT') !== -1 ? raw : raw + 'USDT';
+    const symbol = raw.indexOf('USDT') !== -1 ? raw : raw + 'USDT';
     return COINS.some(function (c) { return c.symbol === symbol; }) ? symbol : null;
   }
 
@@ -569,11 +569,11 @@
     document.getElementById('refresh').addEventListener('click', refreshAll);
 
     global.addEventListener('hashchange', function () {
-      var symbol = readHash();
+      const symbol = readHash();
       if (symbol && symbol !== state.symbol) selectPair(symbol, false);
     });
 
-    var initial = readHash() || 'BTCUSDT';
+    const initial = readHash() || 'BTCUSDT';
     state.symbol = initial;
     markActiveRow();
 

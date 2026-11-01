@@ -1,10 +1,8 @@
-# Crypto Signals — public demo
+# Crypto Signals: public demo
 
 A browser-only slice of **EM Gruppen Crypto Signals**. It pulls public market
 data, scores 18 major pairs with four standard indicators, and draws the chart
 itself. No account, no API key, no build step, no backend.
-
-![status](https://img.shields.io/badge/status-demo-21c7b6) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 > **This is a demo, not the product.** The score shown here is an illustrative
 > equal-weight blend of four indicators. It is not the production model and it
@@ -12,14 +10,14 @@ itself. No account, no API key, no build step, no backend.
 
 ## What it does
 
-- **Market view** — price, 24h change and a score for each pair, fetched in one
+- **Market view.** Price, 24h change and a score for each pair, fetched in one
   request and scored from daily candles.
-- **Pair detail** — gauge, candlestick chart with EMA 20 and volume, plus
+- **Pair detail.** Gauge, candlestick chart with EMA 20 and volume, plus
   volatility and range statistics.
-- **Transparent scoring** — every point is broken down by indicator, with the
-  exact reading that produced it.
-- **Keyboard and mobile friendly** — buttons rather than clickable divs, visible
-  focus states, a layout that reflows to one column on narrow screens.
+- **Transparent scoring.** Every point is broken down by indicator, with the
+  reading that produced it.
+- **Keyboard and mobile friendly.** Buttons rather than clickable divs, visible
+  focus states, one column on narrow screens.
 
 ## How the score works
 
@@ -33,8 +31,8 @@ no hidden tuning:
 | MACD histogram | ±2 | 12/26 EMA difference minus its 9-period signal, normalised by price |
 | On-balance volume | ±1 | Whether volume accumulates on up days or down days over 14 sessions |
 
-Total range is ±7. Labels are symmetrical: 1–2 bullish/bearish, 3–4 strong,
-5–7 very strong.
+Total range is ±7. Labels are symmetrical: 1 to 2 bullish or bearish, 3 to 4
+strong, 5 to 7 very strong.
 
 ## Running it
 
@@ -47,9 +45,22 @@ python3 -m http.server 8080
 ```
 
 Then open <http://localhost:8080>. Opening `index.html` directly from disk also
-works in most browsers — the app only talks to remote APIs, never to local files.
+works in most browsers; the app only talks to remote APIs, never to local files.
 
 There is nothing to install and nothing to configure.
+
+## Tests
+
+The indicator layer runs under Node's built-in test runner, with no dependencies:
+
+```bash
+npm test
+```
+
+Thirteen known-answer tests cover EMA warm-up, RSI edge cases (all gains, all
+losses, flat series), MACD sign, ATR, range position, volume ratio, the minimum
+history requirement, and the component weights that make up the total score. CI
+runs the same suite on Node 20, 22 and 24.
 
 ## Structure
 
@@ -62,13 +73,13 @@ There is nothing to install and nothing to configure.
 | `chart.js` | Canvas candlestick renderer, EMA overlay, hover readout |
 | `app.js` | State, rendering, event wiring, hash routing |
 
-The indicator layer knows nothing about the UI, and the data layer knows nothing
-about the score. That separation is the point of the demo.
+The indicator layer has no knowledge of the UI, and the data layer has no
+knowledge of the score, which is what makes the engine testable on its own.
 
 ## Data
 
-- **Binance** public REST API — daily klines and 24h tickers (primary).
-- **CoinGecko** public API — automatic fallback if Binance is unreachable or
+- **Binance** public REST API for daily klines and 24h tickers (primary).
+- **CoinGecko** public API as a fallback if Binance is unreachable or
   geo-blocked.
 
 Responses are cached in memory for five minutes, one request per pair at a time,
@@ -90,7 +101,7 @@ Current Chrome, Safari, Firefox and Edge. Uses Canvas 2D, CSS custom properties,
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ---
 

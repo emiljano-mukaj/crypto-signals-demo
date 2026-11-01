@@ -1,5 +1,5 @@
 /*
- * Crypto Signals — canvas chart
+ * Crypto Signals: canvas chart
  *
  * A small candlestick renderer: 90 daily candles, volume strip, EMA 20 overlay,
  * last-price marker and a hover readout. No charting library, no CDN.
@@ -7,7 +7,7 @@
 (function (global) {
   'use strict';
 
-  var COLORS = {
+  const COLORS = {
     grid: 'rgba(255,255,255,0.045)',
     axis: '#6b7c99',
     up: '#21c7b6',
@@ -61,8 +61,8 @@
   };
 
   Chart.prototype._resize = function () {
-    var rect = this.canvas.getBoundingClientRect();
-    var dpr = global.devicePixelRatio || 1;
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = global.devicePixelRatio || 1;
     if (!rect.width || !rect.height) return;
     this.canvas.width = Math.round(rect.width * dpr);
     this.canvas.height = Math.round(rect.height * dpr);
@@ -73,29 +73,29 @@
   };
 
   Chart.prototype._geometry = function () {
-    var padRight = 56;
-    var padLeft = 8;
-    var padTop = 12;
-    var padBottom = 22;
-    var volumeH = 42;
-    var gap = 10;
+    const padRight = 56;
+    const padLeft = 8;
+    const padTop = 12;
+    const padBottom = 22;
+    const volumeH = 42;
+    const gap = 10;
 
-    var plotW = this.width - padLeft - padRight;
-    var plotH = this.height - padTop - padBottom - volumeH - gap;
+    const plotW = this.width - padLeft - padRight;
+    const plotH = this.height - padTop - padBottom - volumeH - gap;
 
-    var count = this.candles.length;
-    var step = count > 0 ? plotW / count : plotW;
-    var bodyW = Math.max(1.5, Math.min(9, step * 0.62));
+    const count = this.candles.length;
+    const step = count > 0 ? plotW / count : plotW;
+    const bodyW = Math.max(1.5, Math.min(9, step * 0.62));
 
-    var min = Infinity;
-    var max = -Infinity;
-    for (var i = 0; i < count; i++) {
-      var c = this.candles[i];
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < count; i++) {
+      const c = this.candles[i];
       if (c.l < min) min = c.l;
       if (c.h > max) max = c.h;
     }
-    for (var j = 0; j < this.ema.length; j++) {
-      var value = this.ema[j];
+    for (let j = 0; j < this.ema.length; j++) {
+      const value = this.ema[j];
       if (value === null || value === undefined) continue;
       if (value < min) min = value;
       if (value > max) max = value;
@@ -104,7 +104,7 @@
       min = min - 1;
       max = max + 1;
     }
-    var pad = (max - min) * 0.08;
+    const pad = (max - min) * 0.08;
     min -= pad;
     max += pad;
 
@@ -134,12 +134,12 @@
   };
 
   Chart.prototype.draw = function () {
-    var ctx = this.ctx;
+    const ctx = this.ctx;
     if (!this.width || !this.height) return;
     ctx.clearRect(0, 0, this.width, this.height);
     if (!this.candles.length) return;
 
-    var g = this._geometry();
+    const g = this._geometry();
     this._grid(ctx, g);
     this._volume(ctx, g);
     this._candles(ctx, g);
@@ -160,10 +160,10 @@
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
-    var lines = 4;
-    for (var i = 0; i <= lines; i++) {
-      var price = g.min + ((g.max - g.min) / lines) * i;
-      var y = Math.round(this._y(price, g)) + 0.5;
+    const lines = 4;
+    for (let i = 0; i <= lines; i++) {
+      const price = g.min + ((g.max - g.min) / lines) * i;
+      const y = Math.round(this._y(price, g)) + 0.5;
       ctx.beginPath();
       ctx.moveTo(g.padLeft, y);
       ctx.lineTo(this.width - g.padRight, y);
@@ -174,9 +174,9 @@
   };
 
   Chart.prototype._volume = function (ctx, g) {
-    var ctx2 = ctx;
-    var maxVol = 0;
-    var i;
+    const ctx2 = ctx;
+    let maxVol = 0;
+    let i;
     for (i = 0; i < this.candles.length; i++) {
       if ((this.candles[i].v || 0) > maxVol) maxVol = this.candles[i].v;
     }
@@ -184,11 +184,11 @@
 
     ctx2.save();
     for (i = 0; i < this.candles.length; i++) {
-      var c = this.candles[i];
-      var ratio = (c.v || 0) / maxVol;
-      var h = Math.max(1, ratio * g.volumeH);
-      var x = this._x(i, g);
-      var up = c.c >= c.o;
+      const c = this.candles[i];
+      const ratio = (c.v || 0) / maxVol;
+      const h = Math.max(1, ratio * g.volumeH);
+      const x = this._x(i, g);
+      const up = c.c >= c.o;
       ctx2.fillStyle = up ? COLORS.upSoft : COLORS.downSoft;
       ctx2.fillRect(x - g.bodyW / 2, g.volumeTop + (g.volumeH - h), g.bodyW, h);
     }
@@ -197,15 +197,15 @@
 
   Chart.prototype._candles = function (ctx, g) {
     ctx.save();
-    for (var i = 0; i < this.candles.length; i++) {
-      var c = this.candles[i];
-      var up = c.c >= c.o;
-      var color = up ? COLORS.up : COLORS.down;
-      var x = this._x(i, g);
-      var openY = this._y(c.o, g);
-      var closeY = this._y(c.c, g);
-      var highY = this._y(c.h, g);
-      var lowY = this._y(c.l, g);
+    for (let i = 0; i < this.candles.length; i++) {
+      const c = this.candles[i];
+      const up = c.c >= c.o;
+      const color = up ? COLORS.up : COLORS.down;
+      const x = this._x(i, g);
+      const openY = this._y(c.o, g);
+      const closeY = this._y(c.c, g);
+      const highY = this._y(c.h, g);
+      const lowY = this._y(c.l, g);
 
       ctx.strokeStyle = color;
       ctx.lineWidth = 1;
@@ -214,8 +214,8 @@
       ctx.lineTo(Math.round(x) + 0.5, lowY);
       ctx.stroke();
 
-      var top = Math.min(openY, closeY);
-      var height = Math.max(1, Math.abs(closeY - openY));
+      const top = Math.min(openY, closeY);
+      const height = Math.max(1, Math.abs(closeY - openY));
       ctx.fillStyle = color;
       ctx.fillRect(x - g.bodyW / 2, top, g.bodyW, height);
     }
@@ -228,12 +228,12 @@
     ctx.lineWidth = 1.4;
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    var started = false;
-    for (var i = 0; i < this.ema.length; i++) {
-      var value = this.ema[i];
+    let started = false;
+    for (let i = 0; i < this.ema.length; i++) {
+      const value = this.ema[i];
       if (value === null || value === undefined) continue;
-      var x = this._x(i, g);
-      var y = this._y(value, g);
+      const x = this._x(i, g);
+      const y = this._y(value, g);
       if (!started) {
         ctx.moveTo(x, y);
         started = true;
@@ -246,9 +246,9 @@
   };
 
   Chart.prototype._lastPrice = function (ctx, g) {
-    var lastCandle = this.candles[this.candles.length - 1];
-    var y = this._y(lastCandle.c, g);
-    var label = this.formatPrice(lastCandle.c);
+    const lastCandle = this.candles[this.candles.length - 1];
+    const y = this._y(lastCandle.c, g);
+    const label = this.formatPrice(lastCandle.c);
 
     ctx.save();
     ctx.strokeStyle = COLORS.lastLine;
@@ -261,11 +261,11 @@
     ctx.setLineDash([]);
 
     ctx.font = '10px ui-monospace, Menlo, monospace';
-    var textW = ctx.measureText(label).width;
-    var boxW = textW + 12;
-    var boxH = 16;
-    var boxX = this.width - g.padRight - 4;
-    var boxY = Math.max(2, Math.min(this.height - boxH - 2, y - boxH / 2));
+    const textW = ctx.measureText(label).width;
+    const boxW = textW + 12;
+    const boxH = 16;
+    const boxX = this.width - g.padRight - 4;
+    const boxY = Math.max(2, Math.min(this.height - boxH - 2, y - boxH / 2));
 
     ctx.fillStyle = lastCandle.c >= lastCandle.o ? COLORS.up : COLORS.down;
     ctx.globalAlpha = 0.16;
@@ -279,19 +279,19 @@
   };
 
   Chart.prototype._timeAxis = function (ctx, g) {
-    var count = this.candles.length;
-    var marks = count > 60 ? [0, Math.floor(count / 2), count - 1] : [0, count - 1];
+    const count = this.candles.length;
+    const marks = count > 60 ? [0, Math.floor(count / 2), count - 1] : [0, count - 1];
     ctx.save();
     ctx.fillStyle = COLORS.axis;
     ctx.font = '10px ui-monospace, Menlo, monospace';
     ctx.textBaseline = 'bottom';
 
     marks.forEach(function (index, position) {
-      var candle = this.candles[index];
+      const candle = this.candles[index];
       if (!candle) return;
-      var date = new Date(candle.t);
-      var text = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-      var x = this._x(index, g);
+      const date = new Date(candle.t);
+      const text = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      let x = this._x(index, g);
       ctx.textAlign = position === 0 ? 'left' : position === marks.length - 1 ? 'right' : 'center';
       if (position === 0) x = g.padLeft;
       if (position === marks.length - 1) x = this.width - g.padRight;
@@ -301,9 +301,9 @@
   };
 
   Chart.prototype._crosshair = function (ctx, g, index) {
-    var c = this.candles[index];
-    var x = this._x(index, g);
-    var y = this._y(c.c, g);
+    const c = this.candles[index];
+    const x = this._x(index, g);
+    const y = this._y(c.c, g);
 
     ctx.save();
     ctx.strokeStyle = COLORS.crosshair;
@@ -326,14 +326,14 @@
 
   Chart.prototype._placeTip = function (x, y, candle) {
     if (!this.tip) return;
-    var date = new Date(candle.t);
-    var rows = [
+    const date = new Date(candle.t);
+    const rows = [
       ['Open', this.formatPrice(candle.o)],
       ['High', this.formatPrice(candle.h)],
       ['Low', this.formatPrice(candle.l)],
       ['Close', this.formatPrice(candle.c)]
     ];
-    var html =
+    let html =
       '<div class="tip__date">' +
       date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
       '</div>';
@@ -345,10 +345,10 @@
     this.tip.innerHTML = html;
     this.tip.hidden = false;
 
-    var tipWidth = this.tip.offsetWidth || 150;
-    var tipHeight = this.tip.offsetHeight || 100;
-    var left = Math.min(Math.max(x, tipWidth / 2 + 6), this.width - tipWidth / 2 - 6);
-    var top = Math.min(Math.max(y - 10, tipHeight + 6), this.height - 10);
+    const tipWidth = this.tip.offsetWidth || 150;
+    const tipHeight = this.tip.offsetHeight || 100;
+    const left = Math.min(Math.max(x, tipWidth / 2 + 6), this.width - tipWidth / 2 - 6);
+    const top = Math.min(Math.max(y - 10, tipHeight + 6), this.height - 10);
 
     this.tip.style.left = left + 'px';
     this.tip.style.top = top + 'px';
@@ -356,11 +356,11 @@
 
   Chart.prototype._onMove = function (event) {
     if (!this.candles.length) return;
-    var rect = this.canvas.getBoundingClientRect();
-    var x = event.clientX - rect.left;
+    const rect = this.canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
     this.pointerY = event.clientY - rect.top;
-    var g = this._geometry();
-    var index = Math.floor((x - g.padLeft) / g.step);
+    const g = this._geometry();
+    const index = Math.floor((x - g.padLeft) / g.step);
     if (index < 0 || index >= this.candles.length) {
       this._onLeave();
       return;

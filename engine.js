@@ -1,5 +1,5 @@
 /*
- * Crypto Signals — indicator engine
+ * Crypto Signals: indicator engine
  *
  * Pure functions only: no DOM, no network, no globals beyond the EMG namespace.
  * Every indicator here is textbook TA (Wilder RSI, MACD, OBV, ATR).
@@ -10,20 +10,20 @@
 (function (global) {
   'use strict';
 
-  var SCALE_MAX = 7;
+  const SCALE_MAX = 7;
 
   /* ---------- series helpers ---------- */
 
   // Returns an array aligned with `values`; entries before the warm-up are null.
   function emaSeries(values, period) {
-    var out = new Array(values.length).fill(null);
+    const out = new Array(values.length).fill(null);
     if (!values || values.length < period) return out;
-    var k = 2 / (period + 1);
-    var prev = 0;
-    for (var i = 0; i < period; i++) prev += values[i];
+    const k = 2 / (period + 1);
+    let prev = 0;
+    for (let i = 0; i < period; i++) prev += values[i];
     prev /= period;
     out[period - 1] = prev;
-    for (var j = period; j < values.length; j++) {
+    for (let j = period; j < values.length; j++) {
       prev = values[j] * k + prev * (1 - k);
       out[j] = prev;
     }
@@ -40,39 +40,40 @@
   function rsi(closes, period) {
     period = period || 14;
     if (!closes || closes.length < period + 1) return null;
-    var gain = 0;
-    var loss = 0;
-    for (var i = 1; i <= period; i++) {
-      var change = closes[i] - closes[i - 1];
+    let gain = 0;
+    let loss = 0;
+    for (let i = 1; i <= period; i++) {
+      const change = closes[i] - closes[i - 1];
       if (change > 0) gain += change;
       else loss -= change;
     }
-    var avgGain = gain / period;
-    var avgLoss = loss / period;
-    for (var j = period + 1; j < closes.length; j++) {
-      var diff = closes[j] - closes[j - 1];
+    let avgGain = gain / period;
+    let avgLoss = loss / period;
+    for (let j = period + 1; j < closes.length; j++) {
+      const diff = closes[j] - closes[j - 1];
       avgGain = (avgGain * (period - 1) + Math.max(diff, 0)) / period;
       avgLoss = (avgLoss * (period - 1) + Math.max(-diff, 0)) / period;
     }
+    if (avgGain === 0 && avgLoss === 0) return 50;
     if (avgLoss === 0) return 100;
-    var rs = avgGain / avgLoss;
+    const rs = avgGain / avgLoss;
     return 100 - 100 / (1 + rs);
   }
 
   // MACD histogram, normalised by price so it is comparable across pairs.
   function macdHistogramPct(closes) {
     if (!closes || closes.length < 35) return null;
-    var fast = emaSeries(closes, 12);
-    var slow = emaSeries(closes, 26);
-    var macdLine = [];
-    for (var i = 0; i < closes.length; i++) {
+    const fast = emaSeries(closes, 12);
+    const slow = emaSeries(closes, 26);
+    const macdLine = [];
+    for (let i = 0; i < closes.length; i++) {
       if (fast[i] === null || slow[i] === null) continue;
       macdLine.push(fast[i] - slow[i]);
     }
     if (macdLine.length < 9) return null;
-    var signal = emaSeries(macdLine, 9);
-    var hist = last(macdLine) - last(signal);
-    var price = last(closes);
+    const signal = emaSeries(macdLine, 9);
+    const hist = last(macdLine) - last(signal);
+    const price = last(closes);
     if (!price) return null;
     return (hist / price) * 100;
   }
@@ -81,10 +82,10 @@
   function obvTrend(candles, lookback) {
     lookback = lookback || 14;
     if (!candles || candles.length < lookback + 1) return null;
-    var obv = 0;
-    var series = [];
-    for (var i = 0; i < candles.length; i++) {
-      var c = candles[i];
+    let obv = 0;
+    const series = [];
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
       if (i === 0) {
         obv = c.v || 0;
       } else {
@@ -92,26 +93,26 @@
       }
       series.push(obv);
     }
-    var window = series.slice(-lookback);
-    var first = window[0];
-    var final = window[window.length - 1];
-    var span = Math.abs(first) > 0 ? Math.abs(first) : 1;
+    const window = series.slice(-lookback);
+    const first = window[0];
+    const final = window[window.length - 1];
+    const span = Math.abs(first) > 0 ? Math.abs(first) : 1;
     return { change: (final - first) / span, rising: final > first };
   }
 
   function atr(candles, period) {
     period = period || 14;
     if (!candles || candles.length < period + 1) return null;
-    var trs = [];
-    for (var i = 1; i < candles.length; i++) {
-      var c = candles[i];
-      var prevClose = candles[i - 1].c;
+    const trs = [];
+    for (let i = 1; i < candles.length; i++) {
+      const c = candles[i];
+      const prevClose = candles[i - 1].c;
       trs.push(Math.max(c.h - c.l, Math.abs(c.h - prevClose), Math.abs(c.l - prevClose)));
     }
-    var value = 0;
-    for (var j = 0; j < period; j++) value += trs[j];
+    let value = 0;
+    for (let j = 0; j < period; j++) value += trs[j];
     value /= period;
-    for (var k = period; k < trs.length; k++) {
+    for (let k = period; k < trs.length; k++) {
       value = (value * (period - 1) + trs[k]) / period;
     }
     return value;
@@ -119,16 +120,16 @@
 
   function rangePosition(candles, n) {
     n = n || 30;
-    var slice = candles.slice(-n);
+    const slice = candles.slice(-n);
     if (!slice.length) return null;
-    var high = -Infinity;
-    var low = Infinity;
-    for (var i = 0; i < slice.length; i++) {
+    let high = -Infinity;
+    let low = Infinity;
+    for (let i = 0; i < slice.length; i++) {
       if (slice[i].h > high) high = slice[i].h;
       if (slice[i].l < low) low = slice[i].l;
     }
-    var close = last(slice).c;
-    var span = high - low;
+    const close = last(slice).c;
+    const span = high - low;
     return {
       high: high,
       low: low,
@@ -140,13 +141,13 @@
   function volumeRatio(candles, period) {
     period = period || 20;
     if (!candles || candles.length < period + 2) return null;
-    var index = candles.length - 2;
-    var sum = 0;
-    for (var i = index - period; i < index; i++) {
+    const index = candles.length - 2;
+    let sum = 0;
+    for (let i = index - period; i < index; i++) {
       sum += candles[i].v || 0;
     }
-    var avg = sum / period;
-    var current = candles[index].v || 0;
+    const avg = sum / period;
+    const current = candles[index].v || 0;
     return avg > 0 ? current / avg : null;
   }
 
@@ -154,21 +155,21 @@
 
   function scoreEma(closes) {
     if (closes.length < 50) return { points: 0, note: 'Not enough history.' };
-    var fast = last(emaSeries(closes, 20));
-    var slow = last(emaSeries(closes, 50));
-    var diff = ((fast - slow) / slow) * 100;
-    var points = diff > 1 ? 2 : diff > 0 ? 1 : diff < -1 ? -2 : diff < 0 ? -1 : 0;
-    var note =
+    const fast = last(emaSeries(closes, 20));
+    const slow = last(emaSeries(closes, 50));
+    const diff = ((fast - slow) / slow) * 100;
+    const points = diff > 1 ? 2 : diff > 0 ? 1 : diff < -1 ? -2 : diff < 0 ? -1 : 0;
+    const note =
       'EMA 20 is ' + Math.abs(diff).toFixed(2) + '% ' +
       (diff >= 0 ? 'above' : 'below') + ' EMA 50.';
     return { points: points, note: note };
   }
 
   function scoreRsi(closes) {
-    var value = rsi(closes.slice(-60), 14);
+    const value = rsi(closes.slice(-60), 14);
     if (value === null) return { points: 0, note: 'Not enough history.' };
-    var points = value < 30 ? 2 : value < 40 ? 1 : value > 70 ? -2 : value > 60 ? -1 : 0;
-    var band =
+    const points = value < 30 ? 2 : value < 40 ? 1 : value > 70 ? -2 : value > 60 ? -1 : 0;
+    const band =
       value < 30 ? 'oversold' :
       value < 40 ? 'below the neutral band' :
       value > 70 ? 'overbought' :
@@ -177,9 +178,9 @@
   }
 
   function scoreMacd(closes) {
-    var pct = macdHistogramPct(closes);
+    const pct = macdHistogramPct(closes);
     if (pct === null) return { points: 0, note: 'Not enough history.' };
-    var points = pct > 0.4 ? 2 : pct > 0.1 ? 1 : pct < -0.4 ? -2 : pct < -0.1 ? -1 : 0;
+    const points = pct > 0.4 ? 2 : pct > 0.1 ? 1 : pct < -0.4 ? -2 : pct < -0.1 ? -1 : 0;
     return {
       points: points,
       note:
@@ -189,9 +190,9 @@
   }
 
   function scoreObv(candles) {
-    var trend = obvTrend(candles.slice(-30), 14);
+    const trend = obvTrend(candles.slice(-30), 14);
     if (!trend) return { points: 0, note: 'Not enough history.' };
-    var points = trend.rising ? 1 : trend.change < 0 ? -1 : 0;
+    const points = trend.rising ? 1 : trend.change < 0 ? -1 : 0;
     return {
       points: points,
       note: trend.rising ? 'Volume accumulating on up days.' : 'Volume accumulating on down days.'
@@ -216,24 +217,24 @@
    */
   function score(candles) {
     if (!candles || candles.length < 50) return null;
-    var closes = candles.map(function (c) { return c.c; });
+    const closes = candles.map(function (c) { return c.c; });
 
-    var ema = scoreEma(closes);
-    var rsiPart = scoreRsi(closes);
-    var macdPart = scoreMacd(closes);
-    var obvPart = scoreObv(candles);
+    const ema = scoreEma(closes);
+    const rsiPart = scoreRsi(closes);
+    const macdPart = scoreMacd(closes);
+    const obvPart = scoreObv(candles);
 
-    var components = [
+    const components = [
       { key: 'ema', name: 'EMA trend (20 / 50)', max: 2, points: ema.points, note: ema.note },
       { key: 'rsi', name: 'RSI (14)', max: 2, points: rsiPart.points, note: rsiPart.note },
       { key: 'macd', name: 'MACD histogram', max: 2, points: macdPart.points, note: macdPart.note },
       { key: 'obv', name: 'On-balance volume', max: 1, points: obvPart.points, note: obvPart.note }
     ];
 
-    var points = components.reduce(function (sum, c) { return sum + c.points; }, 0);
-    var descriptor = labelFor(points);
-    var lastClose = last(candles).c;
-    var atrValue = atr(candles, 14);
+    const points = components.reduce(function (sum, c) { return sum + c.points; }, 0);
+    const descriptor = labelFor(points);
+    const lastClose = last(candles).c;
+    const atrValue = atr(candles, 14);
 
     return {
       points: points,

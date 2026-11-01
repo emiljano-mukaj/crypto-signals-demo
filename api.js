@@ -1,5 +1,5 @@
 /*
- * Crypto Signals — data layer
+ * Crypto Signals: data layer
  *
  * Public endpoints only. Binance is the primary source (candles + volume),
  * CoinGecko is the fallback when Binance is unreachable or geo-blocked.
@@ -8,11 +8,11 @@
 (function (global) {
   'use strict';
 
-  var BINANCE = 'https://api.binance.com/api/v3';
-  var COINGECKO = 'https://api.coingecko.com/api/v3';
-  var CACHE_TTL = 5 * 60 * 1000;
+  const BINANCE = 'https://api.binance.com/api/v3';
+  const COINGECKO = 'https://api.coingecko.com/api/v3';
+  const CACHE_TTL = 5 * 60 * 1000;
 
-  var COINS = [
+  const COINS = [
     { symbol: 'BTCUSDT', name: 'Bitcoin', cg: 'bitcoin' },
     { symbol: 'ETHUSDT', name: 'Ethereum', cg: 'ethereum' },
     { symbol: 'SOLUSDT', name: 'Solana', cg: 'solana' },
@@ -41,13 +41,13 @@
 
   async function getJson(url, attempts) {
     attempts = attempts || 3;
-    var lastError = null;
+    let lastError = null;
 
-    for (var attempt = 0; attempt < attempts; attempt++) {
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 12000);
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(function () { controller.abort(); }, 12000);
       try {
-        var response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+        const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
         clearTimeout(timer);
 
         if (!response.ok) {
@@ -72,18 +72,18 @@
 
   // Run `worker` over `items` with bounded concurrency.
   async function mapLimit(items, limit, worker) {
-    var results = new Array(items.length);
-    var cursor = 0;
+    const results = new Array(items.length);
+    let cursor = 0;
 
     async function runner() {
       while (cursor < items.length) {
-        var index = cursor++;
+        const index = cursor++;
         results[index] = await worker(items[index], index);
       }
     }
 
-    var runners = [];
-    for (var i = 0; i < Math.min(limit, items.length); i++) runners.push(runner());
+    const runners = [];
+    for (let i = 0; i < Math.min(limit, items.length); i++) runners.push(runner());
     await Promise.all(runners);
     return results;
   }
@@ -111,12 +111,12 @@
 
   /* ---------- cache ---------- */
 
-  var candleCache = new Map();
-  var inflight = new Map();
-  var overviewCache = null;
+  const candleCache = new Map();
+  const inflight = new Map();
+  let overviewCache = null;
 
   function cacheGet(symbol) {
-    var entry = candleCache.get(symbol);
+    const entry = candleCache.get(symbol);
     if (entry && Date.now() - entry.at < CACHE_TTL) return entry;
     return null;
   }
@@ -136,13 +136,13 @@
   async function overview() {
     if (overviewCache && Date.now() - overviewCache.at < CACHE_TTL) return overviewCache;
 
-    var symbols = COINS.map(function (c) { return c.symbol; });
-    var quotes = {};
+    const symbols = COINS.map(function (c) { return c.symbol; });
+    const quotes = {};
 
     try {
-      var url =
+      const url =
         BINANCE + '/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(symbols));
-      var rows = await getJson(url, 2);
+      const rows = await getJson(url, 2);
       (rows || []).forEach(function (row) {
         quotes[row.symbol] = {
           price: parseFloat(row.lastPrice),
@@ -155,15 +155,15 @@
       return overviewCache;
     } catch (binanceError) {
       // Fallback: CoinGecko gives the same headline numbers in one request.
-      var ids = COINS.map(function (c) { return c.cg; }).join(',');
-      var markets = await getJson(
+      const ids = COINS.map(function (c) { return c.cg; }).join(',');
+      const markets = await getJson(
         COINGECKO + '/coins/markets?vs_currency=usd&ids=' + ids + '&per_page=250',
         2
       );
-      var byId = {};
+      const byId = {};
       (markets || []).forEach(function (coin) { byId[coin.id] = coin; });
       COINS.forEach(function (coin) {
-        var match = byId[coin.cg];
+        const match = byId[coin.cg];
         if (!match) return;
         quotes[coin.symbol] = {
           price: match.current_price,
@@ -183,13 +183,13 @@
    * a single request.
    */
   function candles(symbol) {
-    var cached = cacheGet(symbol);
+    const cached = cacheGet(symbol);
     if (cached) {
       return Promise.resolve({ source: cached.source, candles: cached.candles, cached: true });
     }
     if (inflight.has(symbol)) return inflight.get(symbol);
 
-    var request = loadCandles(symbol).finally(function () {
+    const request = loadCandles(symbol).finally(function () {
       inflight.delete(symbol);
     });
     inflight.set(symbol, request);
@@ -197,25 +197,25 @@
   }
 
   async function loadCandles(symbol) {
-    var coin = COINS.find(function (c) { return c.symbol === symbol; });
+    const coin = COINS.find(function (c) { return c.symbol === symbol; });
 
     try {
-      var rows = await getJson(
+      const rows = await getJson(
         BINANCE + '/klines?symbol=' + symbol + '&interval=1d&limit=120',
         2
       );
       if (!Array.isArray(rows) || rows.length < 50) throw new Error('Insufficient candle history');
-      var parsed = fromBinanceKlines(rows);
+      const parsed = fromBinanceKlines(rows);
       candleCache.set(symbol, { at: Date.now(), source: 'Binance', candles: parsed });
       return { source: 'Binance', candles: parsed, cached: false };
     } catch (binanceError) {
       if (!coin) throw binanceError;
-      var ohlc = await getJson(
+      const ohlc = await getJson(
         COINGECKO + '/coins/' + coin.cg + '/ohlc?vs_currency=usd&days=365',
         2
       );
       if (!Array.isArray(ohlc) || ohlc.length < 55) throw binanceError;
-      var fallback = fromCoinGeckoOhlc(ohlc);
+      const fallback = fromCoinGeckoOhlc(ohlc);
       candleCache.set(symbol, { at: Date.now(), source: 'CoinGecko', candles: fallback });
       return { source: 'CoinGecko', candles: fallback, cached: false };
     }
@@ -226,10 +226,10 @@
    * Resolves with { SYMBOL: {source, candles} | {error} }.
    */
   async function manyCandles(symbols, onResult) {
-    var output = {};
+    const output = {};
     await mapLimit(symbols, 4, async function (symbol) {
       try {
-        var result = await candles(symbol);
+        const result = await candles(symbol);
         output[symbol] = result;
       } catch (error) {
         output[symbol] = { error: error.message };
