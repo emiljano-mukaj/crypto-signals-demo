@@ -8,6 +8,8 @@ itself. No account, no API key, no build step, no backend.
 > equal-weight blend of four indicators. It is not the production model and it
 > contains no trading rules. Nothing in this repository is investment advice.
 
+**Live demo:** <https://emiljano-mukaj.github.io/crypto-signals-demo/>
+
 ## What it does
 
 - **Market view.** Price, 24h change and a score for each pair, fetched in one

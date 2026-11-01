@@ -10,6 +10,7 @@
   "scripts": {
     "test": "node --test"
   },
+  "homepage": "https://emiljano-mukaj.github.io/crypto-signals-demo/",
   "repository": {
     "type": "git",
     "url": "https://github.com/emiljano-mukaj/crypto-signals-demo.git"
